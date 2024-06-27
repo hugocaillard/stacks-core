@@ -225,6 +225,9 @@ impl<'a, T: BlockEventDispatcher> OnChainRewardSetProvider<'a, T> {
             debug_log,
             "PoX reward set loaded from written block state";
             "reward_set_block_id" => %reward_set_block.index_block_hash(),
+            "burn_header_hash" => %reward_set_block.burn_header_hash,
+            "stacks_block_height" => reward_set_block.stacks_block_height,
+            "burn_header_height" => reward_set_block.burn_header_height,
         );
 
         if reward_set.signers.is_none() {

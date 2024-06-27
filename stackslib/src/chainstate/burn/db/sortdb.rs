@@ -1080,6 +1080,7 @@ pub trait SortitionHandle {
         block_at_burn_height: u64,
         potential_ancestor: &BlockHeaderHash,
     ) -> Result<bool, db_error> {
+        info!("Descended from block_at_burn_height={block_at_burn_height:?}, potential_ancestor={potential_ancestor:?} ");
         let earliest_block_height_opt = self.sqlite().query_row(
             "SELECT block_height FROM snapshots WHERE winning_stacks_block_hash = ? ORDER BY block_height ASC LIMIT 1",
             &[potential_ancestor],
@@ -1089,6 +1090,10 @@ pub trait SortitionHandle {
         let earliest_block_height = match earliest_block_height_opt {
             Some(h) => h,
             None => {
+                info!(
+                    "No block with hash {} found in sortition history",
+                    potential_ancestor
+                );
                 return Ok(false);
             }
         };
@@ -1102,6 +1107,10 @@ pub trait SortitionHandle {
 
         while sn.block_height >= earliest_block_height {
             if !sn.sortition {
+                debug!(
+                    "Block at burn height {} is not a sortition block",
+                    sn.block_height
+                );
                 return Ok(false);
             }
             if &sn.winning_stacks_block_hash == potential_ancestor {
@@ -1140,6 +1149,10 @@ pub trait SortitionHandle {
                 }
             }
         }
+        debug!(
+            "Block at burn height {} is not a descendant of {}",
+            block_at_burn_height, potential_ancestor
+        );
         return Ok(false);
     }
 }
