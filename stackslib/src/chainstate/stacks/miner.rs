@@ -133,6 +133,7 @@ pub fn signal_mining_blocked(miner_status: Arc<Mutex<MinerStatus>>) {
 
 /// resume mining if we blocked it earlier
 pub fn signal_mining_ready(miner_status: Arc<Mutex<MinerStatus>>) {
+    debug!("Signaling miner to resume"; "thread_id" => ?std::thread::current().id());
     match miner_status.lock() {
         Ok(mut status) => {
             status.remove_blocked();
@@ -1203,7 +1204,6 @@ impl<'a> StacksMicroblockBuilder<'a> {
                 intermediate_result = mem_pool.iterate_candidates(
                     &mut clarity_tx,
                     &mut tx_events,
-                    self.anchor_block_height,
                     mempool_settings.clone(),
                     |clarity_tx, to_consider, estimator| {
                         let mempool_tx = &to_consider.tx;
@@ -2210,7 +2210,6 @@ impl StacksBlockBuilder {
                 intermediate_result = mempool.iterate_candidates(
                     epoch_tx,
                     &mut tx_events,
-                    tip_height,
                     mempool_settings.clone(),
                     |epoch_tx, to_consider, estimator| {
                         // first, have we been preempted?
@@ -2515,7 +2514,7 @@ impl StacksBlockBuilder {
 
         info!(
             "Miner: mined anchored block";
-            "block_hash" => %block.block_hash(),
+            "stacks_block_hash" => %block.block_hash(),
             "height" => block.header.total_work.work,
             "tx_count" => block.txs.len(),
             "parent_stacks_block_hash" => %block.header.parent_block,

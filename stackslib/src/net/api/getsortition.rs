@@ -64,6 +64,8 @@ pub struct SortitionInfo {
     pub burn_block_hash: BurnchainHeaderHash,
     /// The burn height of the block that triggered this event.
     pub burn_block_height: u64,
+    /// The burn block time of the sortition
+    pub burn_header_timestamp: u64,
     /// This sortition ID of the block that triggered this event. This incorporates
     ///  PoX forking information and the burn block hash to obtain an identifier that is
     ///  unique across PoX forks and burnchain forks.
@@ -214,7 +216,9 @@ impl RPCRequestHandler for GetSortitionHandler {
                     .ok_or_else(|| ChainError::NoSuchBlockError)?;
 
                 let (miner_pk_hash160, stacks_parent_ch, committed_block_hash, last_sortition_ch) = if !sortition_sn.sortition {
-                    (None, None, None, None)
+                    let handle = sortdb.index_handle(&sortition_sn.sortition_id);
+                    let last_sortition = handle.get_last_snapshot_with_sortition(sortition_sn.block_height)?;
+                    (None, None, None, Some(last_sortition.consensus_hash))
                 } else {
                     let block_commit = SortitionDB::get_block_commit(sortdb.conn(), &sortition_sn.winning_block_txid, &sortition_sn.sortition_id)?
                         .ok_or_else(|| {
@@ -243,7 +247,7 @@ impl RPCRequestHandler for GetSortitionHandler {
                         stacks_parent_sn.consensus_hash.clone()
                     } else {
                         // we actually need to perform the marf lookup
-                        let last_sortition = handle.get_last_snapshot_with_sortition(stacks_parent_sn.block_height)?;
+                        let last_sortition = handle.get_last_snapshot_with_sortition(sortition_sn.block_height.saturating_sub(1))?;
                         last_sortition.consensus_hash
                     };
 
@@ -254,6 +258,7 @@ impl RPCRequestHandler for GetSortitionHandler {
                 Ok(SortitionInfo {
                     burn_block_hash: sortition_sn.burn_header_hash,
                     burn_block_height: sortition_sn.block_height,
+                    burn_header_timestamp: sortition_sn.burn_header_timestamp,
                     sortition_id: sortition_sn.sortition_id,
                     parent_sortition_id: sortition_sn.parent_sortition_id,
                     consensus_hash: sortition_sn.consensus_hash,

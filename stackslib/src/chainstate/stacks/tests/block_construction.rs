@@ -32,6 +32,7 @@ use clarity::vm::test_util::TEST_BURN_STATE_DB;
 use clarity::vm::types::*;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
+use rusqlite::params;
 use stacks_common::address::*;
 use stacks_common::types::chainstate::SortitionId;
 use stacks_common::util::hash::MerkleTree;
@@ -3059,7 +3060,7 @@ fn test_build_microblock_stream_forks_with_descendants() {
 
                     // erase any pending transactions -- this is a "worse" poison-microblock,
                     // and we want to avoid mining the "better" one
-                    mempool.clear_before_height(10).unwrap();
+                    mempool.clear_before_coinbase_height(10).unwrap();
 
                     let mut tx_bytes = vec![];
                     poison_microblock_tx
@@ -4783,6 +4784,7 @@ fn paramaterized_mempool_walk_test(
                 &mut chainstate,
                 &b_1.0,
                 &b_1.1,
+                true,
                 txid,
                 tx_bytes,
                 tx_fee,
@@ -4799,7 +4801,7 @@ fn paramaterized_mempool_walk_test(
                 mempool_tx
                     .execute(
                         "UPDATE mempool SET fee_rate = ? WHERE txid = ?",
-                        rusqlite::params![Some(123.0), &txid],
+                        params![Some(123.0), &txid],
                     )
                     .unwrap();
             } else {
@@ -4807,7 +4809,7 @@ fn paramaterized_mempool_walk_test(
                 mempool_tx
                     .execute(
                         "UPDATE mempool SET fee_rate = ? WHERE txid = ?",
-                        rusqlite::params![none, &txid],
+                        params![none, &txid],
                     )
                     .unwrap();
             }
@@ -4831,7 +4833,6 @@ fn paramaterized_mempool_walk_test(
                     .iterate_candidates::<_, ChainstateError, _>(
                         clarity_conn,
                         &mut tx_events,
-                        2,
                         mempool_settings.clone(),
                         |_, available_tx, _| {
                             count_txs += 1;

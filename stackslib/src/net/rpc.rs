@@ -37,12 +37,13 @@ use clarity::vm::{ClarityName, ClarityVersion, ContractName, SymbolicExpression,
 use libstackerdb::{StackerDBChunkAckData, StackerDBChunkData};
 use rand::prelude::*;
 use rand::thread_rng;
-use rusqlite::{DatabaseName, NO_PARAMS};
+use rusqlite::DatabaseName;
 use stacks_common::codec::StacksMessageCodec;
 use stacks_common::types::chainstate::{
     BlockHeaderHash, BurnchainHeaderHash, StacksAddress, StacksBlockId,
 };
 use stacks_common::types::net::{PeerAddress, PeerHost};
+use stacks_common::types::sqlite::NO_PARAMS;
 use stacks_common::types::StacksPublicKeyBuffer;
 use stacks_common::util::chunked_encoding::*;
 use stacks_common::util::get_epoch_time_secs;
@@ -193,7 +194,7 @@ impl ConversationHttp {
 
     /// Is a request in-progress?
     pub fn is_request_inflight(&self) -> bool {
-        self.pending_request.is_some()
+        self.pending_request.is_some() || self.pending_response.is_some()
     }
 
     /// Start a HTTP request from this peer, and expect a response.

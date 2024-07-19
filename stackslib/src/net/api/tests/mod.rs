@@ -83,6 +83,7 @@ mod gettransaction_unconfirmed;
 mod liststackerdbreplicas;
 mod postblock;
 mod postblock_proposal;
+mod postblock_v3;
 mod postfeerate;
 mod postmempoolquery;
 mod postmicroblock;
@@ -599,6 +600,7 @@ impl<'a> TestRPC<'a> {
                     peer_1.chainstate(),
                     &consensus_hash,
                     &stacks_block.block_hash(),
+                    true,
                     txid.clone(),
                     tx_bytes,
                     tx_fee,
