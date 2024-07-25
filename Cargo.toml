@@ -45,3 +45,7 @@ lto = "fat"
 [profile.release-lite]
 inherits = "release"
 lto = "thin"
+
+[patch."https://github.com/stacks-network/stacks-core.git"]
+clarity = { path = "./clarity" }
+stacks-common = { path = "./stacks-common" }
