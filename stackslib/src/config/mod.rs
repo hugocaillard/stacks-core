@@ -21,6 +21,7 @@ use std::net::{Ipv4Addr, SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::{Arc, LazyLock, Mutex};
+use std::thread::sleep;
 use std::time::Duration;
 use std::{cmp, fs, thread};
 
@@ -1533,15 +1534,25 @@ impl BurnchainConfigFile {
                 .unwrap_or(default_burnchain_config.commit_anchor_block_within),
             peer_host: match self.peer_host.as_ref() {
                 Some(peer_host) => {
-                    format!("{}:1", &peer_host)
-                        .to_socket_addrs()
-                        .map_err(|e| format!("Invalid burnchain.peer_host: {}", &e))?
-                        .next()
-                        .is_none()
-                        .then(|| {
-                            return format!("No IP address could be queried for '{}'", &peer_host);
-                        });
-                    peer_host.clone()
+                    // Using std::net::LookupHost would be preferable, but it's
+                    // unfortunately unstable at this point.
+                    // https://doc.rust-lang.org/1.6.0/std/net/struct.LookupHost.html
+                    let mut attempts = 0;
+                    let mut addrs_iter = loop {
+                        if let Ok(addrs_iter) = format!("{peer_host}:1").to_socket_addrs() {
+                            break addrs_iter;
+                        }
+                        attempts += 1;
+                        if attempts == 15 {
+                            return Err(format!(
+                                "No IP address could be queried for '{}'",
+                                &peer_host
+                            ));
+                        }
+                        sleep(std::time::Duration::from_secs(5));
+                    };
+                    let sock_addr = addrs_iter.next().expect("Failed to resolve IP address");
+                    format!("{}", sock_addr.ip())
                 }
                 None => default_burnchain_config.peer_host,
             },
