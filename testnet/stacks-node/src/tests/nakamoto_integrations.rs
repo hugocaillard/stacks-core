@@ -27,7 +27,7 @@ use clarity::vm::ast::ASTRules;
 use clarity::vm::costs::ExecutionCost;
 use clarity::vm::types::{PrincipalData, QualifiedContractIdentifier};
 use clarity::vm::{ClarityName, ClarityVersion, Value};
-use http_types::headers::AUTHORIZATION;
+use hyper::header::AUTHORIZATION;
 use lazy_static::lazy_static;
 use libsigner::v0::messages::{
     MessageSlotID, RejectReason, SignerMessage as SignerMessageV0, StateMachineUpdate,
