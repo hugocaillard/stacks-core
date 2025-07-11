@@ -9,6 +9,9 @@ mod prometheus;
 pub enum MonitoringError {
     AlreadyBound,
     UnableToGetAddress,
+    EncodingError(String),
+    ResponseError(String),
+    ThreadSpawnError,
 }
 
 #[cfg(feature = "monitoring_prom")]
